@@ -28,23 +28,7 @@ class System {
     for (int x = 0; x < this.cells.length; x++) {
       for (int y = 0; y < this.cells[x].length; y++) {
         if (this.cells[x][y].val != 0) {
-          for (int ox = (int) -radius; ox < radius; ox++) {
-            for (int oy = (int) -radius; oy < radius; oy++) {
-              if (!this.kernel.inRange(ox, oy)) continue;
-
-              int tx = x + ox;
-              int ty = y + oy;
-
-              while (tx < 0) tx += this.cells.length;
-              while (tx >= this.cells.length) tx -= this.cells.length;
-              while (ty < 0) ty += this.cells[x].length;
-              while (ty >= this.cells[x].length) ty -= this.cells[x].length;
-
-              if (this.cells[x][y].val != 0) {
-                updates.put(x + y * this.cells.length, this.cells[tx][ty]);
-              }
-            }
-          }
+          updates.put(x + y * this.cells.length, this.cells[x][y]);
         }
       }
     }
@@ -67,7 +51,7 @@ class System {
     }
     this.display();
   }
-  
+
   void checkUpdates() {
     HashMap<Integer, Cell> nextUpdates = new HashMap<Integer, Cell>();
     Set<Integer> keys = this.updates.keySet();
@@ -90,7 +74,10 @@ class System {
           while (ty >= this.cells[x].length) ty -= this.cells[x].length;
 
           if (c.val != 0) {
-            nextUpdates.put(k, this.cells[tx][ty]);
+            nextUpdates.put(tx + ty * this.cells.length, this.cells[tx][ty]);
+          }
+          if (this.cells[tx][ty].val != 0) {
+            nextUpdates.put(tx + ty * this.cells.length, this.cells[tx][ty]);
           }
         }
       }

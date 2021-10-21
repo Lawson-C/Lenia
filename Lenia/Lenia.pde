@@ -39,8 +39,7 @@ void setup() {
 
   mainK = new Kernel(mask);
   //system = new System(width, width/160., mainK, mainG);
-  Cell[][] c = symmetric(width, 4.);
-  system = new System(c, 4., mainK, mainG);
+  system = new System(small(width, 1.), 4., mainK, mainG);
   system.display();
   frameRate(60);
 }
