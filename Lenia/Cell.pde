@@ -32,6 +32,6 @@ class Cell {
   }
   
   int[] getIndex() {
-    return new int[] {(int) (this.pos.x * this.size), (int) (this.pos.y * this.size)};
+    return new int[] {(int) (this.pos.x / this.size), (int) (this.pos.y / this.size)};
   }
 }
