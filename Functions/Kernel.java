@@ -1,5 +1,5 @@
 class Kernel {
-  float s;
+  double s;
   float[][] mask;
 
   Kernel(float[][] mask) {
@@ -9,16 +9,16 @@ class Kernel {
   }
 
   boolean inRange(float offx, float offy) {
-    return sqrt(sq(offx) + sq(offy)) <= half();
+    return Math.sqrt(offx*offx + offy*offy) <= half();
   }
 
   float half() {
-    return this.s/2.;
+    return (float) (this.s/2.);
   }
 
   float map(float x, float y, float range) {
-    float mx = PApplet.map(x, 0, range, 0, this.s);
-    float my = PApplet.map(y, 0, range, 0, this.s);
+    double mx = this.s * x / range;
+    double my = this.s * y / range;
     return !inRange(x, y) ? 0 : mask[(int) (mx + half())][(int) (my + half())];
   }
 }
