@@ -1,27 +1,37 @@
-class System {
-  final float dt = .5;
+import java.util.Set;
 
-  Kernel k;
-  GrowthFunction g;
+class System {
+  final float dt = 10;
+  final float radius = 13;
+
+  Kernel kernel;
+  GrowthFunction growth;
   Cell[][] cells;
   float[][] mask;
 
-  ArrayList<Cell> updates;
+  HashMap<Integer, Cell> updates;
 
-  System(Cell[][] c, float size, Kernel k, GrowthFunction g) {
+  System(Cell[][] c, float size, Kernel kernel, GrowthFunction g) {
     this.cells = c;
     if (c[0][0] == null) {
       for (int x = 0; x < c.length; x++) {
-        for (int y = 0; y < c.length; y++) {
+        for (int y = 0; y < c[x].length; y++) {
           float v = (float) Math.random() * .9;
           this.cells[x][y] = new Cell(x * size, y * size, 
             v, size);
         }
       }
     }
-    this.k = k;
-    this.g = g;
-    this.updates = new ArrayList<Cell>();
+    this.kernel = kernel;
+    this.growth = g;
+    this.updates = new HashMap<Integer, Cell>();
+    for (int x = 0; x < this.cells.length; x++) {
+      for (int y = 0; y < this.cells[x].length; y++) {
+        if (this.cells[x][y].val != 0) {
+          updates.put(x + y * this.cells.length, this.cells[x][y]);
+        }
+      }
+    }
   }
 
   // width and height are stored in units of pixels
@@ -30,43 +40,80 @@ class System {
   }
 
   void periodic() {
+    this.checkUpdates();
     if ((float) tick % 1./dt == 0) {
       this.mask = this.getMask();
     }
-    for (int x = 0; x < this.cells.length; x++) {
-      for (int y = 0; y < this.cells[x].length; y++) {
-        this.cells[x][y].addVal(this.mask[x][y] * dt);
-      }
+    Set<Integer> keys = this.updates.keySet();
+    for (int k : keys) {
+      int[] i = this.updates.get(k).getIndex();
+      this.cells[i[0]][i[1]].addVal(this.mask[i[0]][i[1]] * dt);
     }
     this.display();
   }
 
-  float[][] getMask() {
-    float[][] mask = new float[cells.length][cells[0].length];
-    for (int x = 0; x < mask.length; x++) {
-      for (int y = 0; y < mask[x].length; y++) {
-        float N = 0;
-        float sigKF = 0;
-        float rad = 8; // radius of neighborhood
+  void checkUpdates() {
+    HashMap<Integer, Cell> nextUpdates = new HashMap<Integer, Cell>();
+    Set<Integer> keys = this.updates.keySet();
+    for (int k : keys) {
+      Cell c = this.updates.get(k);
+      int[] ind = c.getIndex();
+      int x = ind[0];
+      int y = ind[1];
 
-        for (int ox = (int) -rad; ox < rad; ox++) {
-          for (int oy = (int) -rad; oy < rad; oy++) {
-            if (!k.inRange(ox, oy)) continue;
+      for (int ox = (int) -radius; ox < radius; ox++) {
+        for (int oy = (int) -radius; oy < radius; oy++) {
+          if (!this.kernel.inRange(ox, oy)) continue;
 
-            int tx = x + ox;
-            int ty = y + oy;
+          int tx = x + ox;
+          int ty = y + oy;
 
-            while (tx < 0) tx += mask.length;
-            while (tx >= mask.length) tx -= mask.length;
-            while (ty < 0) ty += mask[x].length;
-            while (ty >= mask[x].length) ty -= mask[x].length;
+          while (tx < 0) tx += this.cells.length;
+          while (tx >= this.cells.length) tx -= this.cells.length;
+          while (ty < 0) ty += this.cells[x].length;
+          while (ty >= this.cells[x].length) ty -= this.cells[x].length;
 
-            N += this.k.map(ox, oy, 2*rad);
-            sigKF += this.k.map(ox, oy, 2*rad) * this.cells[tx][ty].val;
+          if (c.val != 0 && nextUpdates.get(tx + ty * this.cells.length) == null) {
+            nextUpdates.put(tx + ty * this.cells.length, this.cells[tx][ty]);
+          }
+          if (this.cells[tx][ty].val != 0 && nextUpdates.get(tx + ty * this.cells.length) == null) {
+            nextUpdates.put(tx + ty * this.cells.length, this.cells[tx][ty]);
           }
         }
-        mask[x][y] = g.growth(sigKF / N);
       }
+    }
+    this.updates = nextUpdates;
+  }
+
+  float[][] getMask() {
+    float[][] mask = new float[cells.length][cells[0].length];
+    Set<Integer> keys = this.updates.keySet();
+    for (int k : keys) {
+      Cell c = this.updates.get(k);
+      int[] ind = c.getIndex();
+      int x = ind[0];
+      int y = ind[1];
+      float N = 0;
+      float sigKF = 0;
+
+      for (int ox = (int) -radius; ox < radius; ox++) {
+        for (int oy = (int) -radius; oy < radius; oy++) {
+          if (!this.kernel.inRange(ox, oy)) continue;
+
+          int tx = x + ox;
+          int ty = y + oy;
+
+          while (tx < 0) tx += mask.length;
+          while (tx >= mask.length) tx -= mask.length;
+          while (ty < 0) ty += mask[x].length;
+          while (ty >= mask[x].length) ty -= mask[x].length;
+
+          N += this.kernel.map(ox, oy, 2*radius);
+          sigKF += this.kernel.map(ox, oy, 2*radius) * this.cells[tx][ty].val;
+        }
+      }
+
+      mask[x][y] = growth.growth(sigKF / N);
     }
     return mask;
   }
