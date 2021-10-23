@@ -54,7 +54,6 @@ class System {
 
   void checkUpdates() {
     HashMap<Integer, Cell> nextUpdates = new HashMap<Integer, Cell>();
-    HashMap<Integer, Boolean> included = new HashMap<Integer, Boolean>();
     Set<Integer> keys = this.updates.keySet();
     for (int k : keys) {
       Cell c = this.updates.get(k);
@@ -74,13 +73,11 @@ class System {
           while (ty < 0) ty += this.cells[x].length;
           while (ty >= this.cells[x].length) ty -= this.cells[x].length;
 
-          if (c.val != 0 && included.get(tx + ty * this.cells.length) == null) {
+          if (c.val != 0 && nextUpdates.get(tx + ty * this.cells.length) == null) {
             nextUpdates.put(tx + ty * this.cells.length, this.cells[tx][ty]);
-            included.put(tx + ty * this.cells.length, true);
           }
-          if (this.cells[tx][ty].val != 0 && included.get(tx + ty * this.cells.length) == null) {
+          if (this.cells[tx][ty].val != 0 && nextUpdates.get(tx + ty * this.cells.length) == null) {
             nextUpdates.put(tx + ty * this.cells.length, this.cells[tx][ty]);
-            included.put(tx + ty * this.cells.length, true);
           }
         }
       }
