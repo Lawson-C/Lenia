@@ -1,3 +1,5 @@
+package functions;
+
 public class KernelPresets {
   static Kernel gaussianKernel() {
     float[][] mask = new float[50][50];

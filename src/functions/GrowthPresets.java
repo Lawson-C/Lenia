@@ -1,3 +1,5 @@
+package functions;
+
 public class GrowthPresets {
   static GrowthFunction gaussian() {
     return new GrowthFunction() {

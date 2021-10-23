@@ -1,3 +1,5 @@
+package functions;
+
 class Kernel {
   double s;
   float[][] mask;
